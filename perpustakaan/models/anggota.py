@@ -1,11 +1,23 @@
-"""Model anggota perpustakaan: Anggota (parent) -> Mahasiswa, Dosen, Umum."""
+r"""Model anggota perpustakaan.
+
+Hierarki (membentuk diamond):
+              Anggota (abstract)
+             /       |        \
+       Mahasiswa   Dosen     Umum
+             \       /
+          AsistenDosen          (multiple inheritance -> diamond)
+
+MRO AsistenDosen: AsistenDosen -> Mahasiswa -> Dosen -> Anggota -> ABC -> object
+"""
+
+from abc import ABC, abstractmethod
 
 from .koleksi import _teks_wajib
 from ..utils import rupiah
 
 
-class Anggota:
-    """Parent class anggota. Aturan pinjam diatur lewat class attribute."""
+class Anggota(ABC):
+    """Abstract class anggota. Aturan pinjam diatur lewat class attribute."""
 
     MAKS_PINJAM = 2
     LAMA_PINJAM = 7  # hari
@@ -52,17 +64,18 @@ class Anggota:
         self.__total_denda -= jumlah
         return self.__total_denda
 
+    @abstractmethod
     def jenis(self):
-        return "Anggota"
+        """Wajib diimplementasikan oleh setiap subclass."""
 
     def info_tambahan(self):
-        return ""
+        """Daftar info khusus subclass; subclass menambah lewat super() (kooperatif)."""
+        return []
 
     def ringkasan(self):
-        teks = f"{self.id} | {self.jenis():<9} | {self.nama}"
-        tambahan = self.info_tambahan()
-        if tambahan:
-            teks += f" | {tambahan}"
+        teks = f"{self.id} | {self.jenis():<13} | {self.nama}"
+        for info in self.info_tambahan():
+            teks += f" | {info}"
         return (
             f"{teks} | Maks {self.MAKS_PINJAM} buku/{self.LAMA_PINJAM} hari"
             f" | Denda: {rupiah(self.total_denda)}"
@@ -86,8 +99,11 @@ class Mahasiswa(Anggota):
     LAMA_PINJAM = 7
     DENDA_PER_HARI = 1000
 
-    def __init__(self, id_anggota, nama, prodi, telepon="", total_denda=0):
-        super().__init__(id_anggota, nama, telepon, total_denda)
+    # **kwargs + super() dengan argumen keyword membuat __init__ "kooperatif":
+    # pada diamond, argumen milik Dosen (bidang) diteruskan sesuai MRO.
+    def __init__(self, id_anggota, nama, prodi, telepon="", total_denda=0, **kwargs):
+        super().__init__(id_anggota=id_anggota, nama=nama, telepon=telepon,
+                         total_denda=total_denda, **kwargs)
         self._prodi = ""
         self.prodi = prodi
 
@@ -103,7 +119,7 @@ class Mahasiswa(Anggota):
         return "Mahasiswa"
 
     def info_tambahan(self):
-        return f"Prodi: {self.prodi}"
+        return [f"Prodi: {self.prodi}"] + super().info_tambahan()
 
     def to_dict(self):
         data = super().to_dict()
@@ -116,8 +132,9 @@ class Dosen(Anggota):
     LAMA_PINJAM = 14
     DENDA_PER_HARI = 500
 
-    def __init__(self, id_anggota, nama, bidang, telepon="", total_denda=0):
-        super().__init__(id_anggota, nama, telepon, total_denda)
+    def __init__(self, id_anggota, nama, bidang, telepon="", total_denda=0, **kwargs):
+        super().__init__(id_anggota=id_anggota, nama=nama, telepon=telepon,
+                         total_denda=total_denda, **kwargs)
         self._bidang = ""
         self.bidang = bidang
 
@@ -133,7 +150,7 @@ class Dosen(Anggota):
         return "Dosen"
 
     def info_tambahan(self):
-        return f"Bidang: {self.bidang}"
+        return [f"Bidang: {self.bidang}"] + super().info_tambahan()
 
     def to_dict(self):
         data = super().to_dict()
@@ -150,7 +167,28 @@ class Umum(Anggota):
         return "Umum"
 
 
-_TIPE_ANGGOTA = {"Mahasiswa": Mahasiswa, "Dosen": Dosen, "Umum": Umum}
+class AsistenDosen(Mahasiswa, Dosen):
+    """Mahasiswa yang juga membantu dosen mengajar (diamond inheritance).
+
+    - MAKS_PINJAM dan DENDA_PER_HARI tidak ditulis ulang, sehingga diambil dari
+      Mahasiswa karena Mahasiswa berada lebih dulu di MRO.
+    - LAMA_PINJAM di-override menjadi 14 hari (hak seperti dosen).
+    - Anggota.__init__ hanya dijalankan SEKALI walaupun diwarisi lewat dua jalur.
+    """
+
+    LAMA_PINJAM = 14
+
+    def __init__(self, id_anggota, nama, prodi, bidang, telepon="", total_denda=0):
+        super().__init__(id_anggota=id_anggota, nama=nama, prodi=prodi,
+                         bidang=bidang, telepon=telepon, total_denda=total_denda)
+
+    def jenis(self):
+        return "Asisten Dosen"
+
+
+_TIPE_ANGGOTA = {
+    "Mahasiswa": Mahasiswa, "Dosen": Dosen, "Umum": Umum, "AsistenDosen": AsistenDosen,
+}
 
 
 def anggota_dari_dict(data):

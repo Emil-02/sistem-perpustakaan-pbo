@@ -1,5 +1,14 @@
-"""Model koleksi perpustakaan: Koleksi (parent) -> Buku, Majalah, Referensi."""
+"""Model koleksi perpustakaan.
 
+Hierarki:
+    Koleksi (abstract)
+    ├── Buku
+    │   ├── Referensi                (multilevel: Koleksi -> Buku -> Referensi)
+    │   └── EBook(DigitalMixin, Buku) (multiple inheritance dengan mixin)
+    └── Majalah
+"""
+
+from abc import ABC, abstractmethod
 from datetime import date
 
 
@@ -9,8 +18,8 @@ def _teks_wajib(nilai, nama_field):
     return nilai.strip()
 
 
-class Koleksi:
-    """Parent class untuk semua jenis koleksi perpustakaan."""
+class Koleksi(ABC):
+    """Abstract class: tidak bisa dibuat objeknya langsung, harus lewat subclass."""
 
     TAHUN_MINIMAL = 1450  # class attribute: berlaku untuk semua koleksi
 
@@ -73,11 +82,16 @@ class Koleksi:
         self._stok = nilai
 
     # ---------- perilaku ----------
+    @abstractmethod
     def jenis(self):
-        return "Koleksi"
+        """Wajib diimplementasikan oleh setiap subclass."""
 
     def bisa_dipinjam(self):
         return self._stok > 0
+
+    def kena_denda(self):
+        """Apakah keterlambatan koleksi ini dikenai denda."""
+        return True
 
     def kurangi_stok(self):
         if self._stok <= 0:
@@ -173,7 +187,75 @@ class Referensi(Buku):
         return f"{super().ringkasan()} | Baca di tempat"
 
 
-_TIPE_KOLEKSI = {"Buku": Buku, "Majalah": Majalah, "Referensi": Referensi}
+class DigitalMixin:
+    """Mixin kemampuan 'digital'. Bukan koleksi sendiri, hanya menambah kemampuan.
+
+    Method di sini memanggil super(), sehingga urutan eksekusinya ditentukan
+    oleh MRO class yang memakainya (misalnya EBook -> DigitalMixin -> Buku -> Koleksi).
+    """
+
+    FORMAT_DIDUKUNG = ("PDF", "EPUB", "MOBI")
+
+    @property
+    def format_file(self):
+        return self._format_file
+
+    @format_file.setter
+    def format_file(self, nilai):
+        nilai = _teks_wajib(nilai, "Format file").upper()
+        if nilai not in self.FORMAT_DIDUKUNG:
+            raise ValueError(f"Format harus salah satu dari {', '.join(self.FORMAT_DIDUKUNG)}")
+        self._format_file = nilai
+
+    @property
+    def ukuran_mb(self):
+        return self._ukuran_mb
+
+    @ukuran_mb.setter
+    def ukuran_mb(self, nilai):
+        if isinstance(nilai, bool):
+            raise ValueError("Ukuran file harus berupa angka")
+        try:
+            nilai = float(nilai)
+        except (TypeError, ValueError):
+            raise ValueError("Ukuran file harus berupa angka") from None
+        if nilai <= 0:
+            raise ValueError("Ukuran file harus lebih dari 0 MB")
+        self._ukuran_mb = nilai
+
+    def kena_denda(self):
+        # Akses digital tidak menimbulkan denda keterlambatan
+        return False
+
+    def ringkasan(self):
+        return f"{super().ringkasan()} | Digital: {self.format_file}, {self.ukuran_mb:g} MB"
+
+    def to_dict(self):
+        data = super().to_dict()
+        data.update(format_file=self.format_file, ukuran_mb=self.ukuran_mb)
+        return data
+
+
+class EBook(DigitalMixin, Buku):
+    """Multiple inheritance: EBook adalah Buku sekaligus punya kemampuan Digital.
+
+    MRO: EBook -> DigitalMixin -> Buku -> Koleksi -> ABC -> object
+    Stok pada e-book berarti jumlah lisensi yang bisa dipinjam bersamaan.
+    """
+
+    def __init__(self, kode, judul, tahun, penulis, penerbit, format_file="PDF",
+                 ukuran_mb=1.0, isbn="", stok=1):
+        super().__init__(kode, judul, tahun, penulis, penerbit, isbn, stok)
+        self.format_file = format_file
+        self.ukuran_mb = ukuran_mb
+
+    def jenis(self):
+        return "E-Book"
+
+
+_TIPE_KOLEKSI = {
+    "Buku": Buku, "Majalah": Majalah, "Referensi": Referensi, "EBook": EBook,
+}
 
 
 def koleksi_dari_dict(data):

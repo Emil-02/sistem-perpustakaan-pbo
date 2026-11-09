@@ -3,8 +3,8 @@
 from datetime import date
 
 from .exceptions import DataDuplikat, PerpustakaanError
-from .models import Buku, Dosen, Mahasiswa, Majalah, Referensi, Umum
-from .utils import rupiah
+from .models import AsistenDosen, Buku, Dosen, EBook, Mahasiswa, Majalah, Referensi, Umum
+from .utils import rupiah, urutan_mro
 
 GARIS = "=" * 60
 
@@ -127,8 +127,8 @@ class MenuPerpustakaan:
                 print("  ! Pilihan tidak tersedia.")
 
     def tambah_koleksi(self):
-        jenis = self._input("Jenis (1=Buku, 2=Majalah, 3=Referensi): ")
-        if jenis not in ("1", "2", "3"):
+        jenis = self._input("Jenis (1=Buku, 2=Majalah, 3=Referensi, 4=E-Book): ")
+        if jenis not in ("1", "2", "3", "4"):
             raise ValueError("Jenis koleksi tidak valid")
         kode = self._input("Kode       : ")
         if kode.upper() in {k.kode for k in self.perpus.daftar_koleksi()}:
@@ -143,8 +143,13 @@ class MenuPerpustakaan:
             penulis = self._input("Penulis    : ")
             penerbit = self._input("Penerbit   : ", wajib=False, bawaan="-")
             isbn = self._input("ISBN       : ", wajib=False, bawaan="")
-            kelas = Buku if jenis == "1" else Referensi
-            koleksi = kelas(kode, judul, tahun, penulis, penerbit, isbn, stok)
+            if jenis == "4":
+                format_file = self._input("Format (PDF/EPUB/MOBI) [PDF]: ", wajib=False, bawaan="PDF")
+                ukuran = self._input("Ukuran (MB) [1]: ", wajib=False, bawaan="1")
+                koleksi = EBook(kode, judul, tahun, penulis, penerbit, format_file, ukuran, isbn, stok)
+            else:
+                kelas = Buku if jenis == "1" else Referensi
+                koleksi = kelas(kode, judul, tahun, penulis, penerbit, isbn, stok)
         self.perpus.tambah_koleksi(koleksi)
         print(f"  ✓ {koleksi.jenis()} '{koleksi.judul}' ditambahkan.")
         return True
@@ -161,7 +166,7 @@ class MenuPerpustakaan:
         print("Data saat ini:", koleksi.ringkasan())
         print("(Kosongkan input jika tidak ingin mengubah)")
         perubahan = {}
-        for atribut in ("judul", "tahun", "stok", "penulis", "penerbit", "edisi"):
+        for atribut in ("judul", "tahun", "stok", "penulis", "penerbit", "edisi", "format_file", "ukuran_mb"):
             if hasattr(koleksi, atribut):
                 nilai = self._input(f"{atribut.capitalize():<10} [{getattr(koleksi, atribut)}]: ", wajib=False)
                 if nilai is not None:
@@ -198,8 +203,8 @@ class MenuPerpustakaan:
                 print("  ! Pilihan tidak tersedia.")
 
     def tambah_anggota(self):
-        jenis = self._input("Jenis (1=Mahasiswa, 2=Dosen, 3=Umum): ")
-        if jenis not in ("1", "2", "3"):
+        jenis = self._input("Jenis (1=Mahasiswa, 2=Dosen, 3=Umum, 4=Asisten Dosen): ")
+        if jenis not in ("1", "2", "3", "4"):
             raise ValueError("Jenis anggota tidak valid")
         id_anggota = self._input("ID anggota : ")
         if id_anggota.upper() in {a.id for a in self.perpus.daftar_anggota()}:
@@ -210,6 +215,10 @@ class MenuPerpustakaan:
             anggota = Mahasiswa(id_anggota, nama, self._input("Prodi      : "), telepon)
         elif jenis == "2":
             anggota = Dosen(id_anggota, nama, self._input("Bidang     : "), telepon)
+        elif jenis == "4":
+            prodi = self._input("Prodi      : ")
+            bidang = self._input("Bidang     : ")
+            anggota = AsistenDosen(id_anggota, nama, prodi, bidang, telepon)
         else:
             anggota = Umum(id_anggota, nama, telepon)
         self.perpus.tambah_anggota(anggota)
@@ -287,6 +296,7 @@ class MenuPerpustakaan:
                 ("3", "Peminjaman terlambat"),
                 ("4", "Riwayat semua peminjaman"),
                 ("5", "Anggota yang memiliki denda"),
+                ("6", "Struktur kelas & MRO"),
                 ("0", "Kembali"),
             ])
             if pilihan == "0":
@@ -303,5 +313,21 @@ class MenuPerpustakaan:
                 berdenda = [a for a in self.perpus.daftar_anggota() if a.total_denda > 0]
                 self._cetak_daftar(berdenda, "Tidak ada anggota yang memiliki denda.")
                 print(f"Total denda tertunggak: {rupiah(self.perpus.total_denda_tertunggak())}")
+            elif pilihan == "6":
+                self.tampilkan_struktur_kelas()
             else:
                 print("  ! Pilihan tidak tersedia.")
+
+    @staticmethod
+    def tampilkan_struktur_kelas():
+        """Menampilkan MRO tiap class, berguna saat presentasi konsep inheritance."""
+        print("Urutan pencarian method (MRO) tiap class:")
+        for kelas in (Buku, Majalah, Referensi, EBook, Mahasiswa, Dosen, Umum, AsistenDosen):
+            print(f" - {kelas.__name__:<13}: {urutan_mro(kelas)}")
+        print("\nCatatan:")
+        print(" - Koleksi & Anggota adalah abstract class (tidak bisa dibuat objeknya langsung).")
+        print(" - Referensi : multilevel  (Koleksi -> Buku -> Referensi).")
+        print(" - EBook     : multiple    (DigitalMixin + Buku).")
+        print(" - AsistenDosen: diamond   (Mahasiswa + Dosen, keduanya turunan Anggota).")
+        print(f"   MAKS_PINJAM={AsistenDosen.MAKS_PINJAM} dan DENDA_PER_HARI={AsistenDosen.DENDA_PER_HARI}"
+              " diambil dari Mahasiswa karena Mahasiswa lebih dulu di MRO.")

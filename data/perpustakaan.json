@@ -50,6 +50,30 @@
       "edisi": "Edisi Januari"
     },
     {
+      "tipe": "EBook",
+      "kode": "E001",
+      "judul": "Belajar Python Dasar",
+      "tahun": 2023,
+      "stok": 5,
+      "penulis": "Tim Penulis",
+      "penerbit": "Penerbit Digital",
+      "isbn": "",
+      "format_file": "PDF",
+      "ukuran_mb": 4.5
+    },
+    {
+      "tipe": "EBook",
+      "kode": "E002",
+      "judul": "Struktur Data dengan Python",
+      "tahun": 2022,
+      "stok": 3,
+      "penulis": "Rinaldi Munir",
+      "penerbit": "Informatika",
+      "isbn": "",
+      "format_file": "EPUB",
+      "ukuran_mb": 2.3
+    },
+    {
       "tipe": "Referensi",
       "kode": "R001",
       "judul": "Kamus Besar Bahasa Indonesia",
@@ -84,6 +108,15 @@
       "telepon": "",
       "total_denda": 0,
       "bidang": "Pemrograman"
+    },
+    {
+      "tipe": "AsistenDosen",
+      "id_anggota": "ASD001",
+      "nama": "Rizky Pratama",
+      "telepon": "",
+      "total_denda": 0,
+      "bidang": "Praktikum PBO",
+      "prodi": "Informatika"
     },
     {
       "tipe": "Umum",

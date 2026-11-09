@@ -1,16 +1,45 @@
-"""Penyimpanan data perpustakaan ke file JSON."""
+"""Penyimpanan data perpustakaan.
+
+Penyimpanan (abstract) mendefinisikan "apa" yang harus bisa dilakukan,
+PenyimpananJSON menentukan "bagaimana" caranya (abstraction).
+"""
 
 import json
 import os
 import tempfile
+from abc import ABC, abstractmethod
 from datetime import date
 
-from .models import Buku, Dosen, Mahasiswa, Majalah, Peminjaman, Referensi, Umum
+from .models import AsistenDosen, Buku, Dosen, EBook, Mahasiswa, Majalah, Peminjaman, Referensi, Umum
 from .models import anggota_dari_dict, koleksi_dari_dict
 from .sistem import Perpustakaan
 
 
-class PenyimpananJSON:
+class Penyimpanan(ABC):
+    """Kontrak penyimpanan; bisa diganti JSON, CSV, database, dll. tanpa mengubah menu."""
+
+    @abstractmethod
+    def ada(self):
+        """True jika data tersimpan sudah ada."""
+
+    @abstractmethod
+    def simpan(self, perpus):
+        """Menyimpan seluruh data Perpustakaan."""
+
+    @abstractmethod
+    def muat(self):
+        """Mengembalikan objek Perpustakaan dari data tersimpan."""
+
+    def muat_atau_buat(self):
+        """Muat data jika ada; jika belum, buat data contoh lalu simpan."""
+        if self.ada():
+            return self.muat()
+        perpus = buat_data_contoh()
+        self.simpan(perpus)
+        return perpus
+
+
+class PenyimpananJSON(Penyimpanan):
     def __init__(self, path_file):
         self._path = path_file
 
@@ -64,14 +93,6 @@ class PenyimpananJSON:
             perpus._pulihkan_peminjaman(transaksi)
         return perpus
 
-    def muat_atau_buat(self):
-        """Muat data jika file ada; jika belum, buat data contoh lalu simpan."""
-        if self.ada():
-            return self.muat()
-        perpus = buat_data_contoh()
-        self.simpan(perpus)
-        return perpus
-
 
 def buat_data_contoh():
     perpus = Perpustakaan("Perpustakaan Kampus")
@@ -80,10 +101,13 @@ def buat_data_contoh():
     perpus.tambah_koleksi(Buku("B003", "Pemrograman Python untuk Pemula", 2021, "Budi Raharjo", "Informatika", stok=4))
     perpus.tambah_koleksi(Buku("B004", "Clean Code", 2008, "Robert C. Martin", "Prentice Hall", stok=1))
     perpus.tambah_koleksi(Majalah("M001", "Majalah Tempo", 2024, "Edisi Januari", stok=2))
+    perpus.tambah_koleksi(EBook("E001", "Belajar Python Dasar", 2023, "Tim Penulis", "Penerbit Digital", "PDF", 4.5, stok=5))
+    perpus.tambah_koleksi(EBook("E002", "Struktur Data dengan Python", 2022, "Rinaldi Munir", "Informatika", "EPUB", 2.3, stok=3))
     perpus.tambah_koleksi(Referensi("R001", "Kamus Besar Bahasa Indonesia", 2016, "Badan Bahasa", "Balai Pustaka", stok=1))
 
     perpus.tambah_anggota(Mahasiswa("MHS001", "Nadia", "Informatika", "081234567890"))
     perpus.tambah_anggota(Mahasiswa("MHS002", "Fajar", "Sistem Informasi"))
     perpus.tambah_anggota(Dosen("DSN001", "Ir. Ida, S.Kom., M.T.", "Pemrograman"))
+    perpus.tambah_anggota(AsistenDosen("ASD001", "Rizky Pratama", "Informatika", "Praktikum PBO"))
     perpus.tambah_anggota(Umum("UMM001", "Budi Santoso", "085600000000"))
     return perpus

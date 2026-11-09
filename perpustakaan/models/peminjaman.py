@@ -66,6 +66,9 @@ class Peminjaman:
         return self.hari_terlambat(tanggal) > 0
 
     def hitung_denda(self, tanggal=None):
+        # Polymorphism: tarif dari jenis anggota, kena/tidaknya denda dari jenis koleksi
+        if not self._koleksi.kena_denda():
+            return 0
         return self.hari_terlambat(tanggal) * self._anggota.DENDA_PER_HARI
 
     def kembalikan(self, tanggal=None):
@@ -88,10 +91,11 @@ class Peminjaman:
         )
         if self.aktif:
             if self.terlambat(tanggal):
-                teks += (
-                    f" | TERLAMBAT {self.hari_terlambat(tanggal)} hari"
-                    f" (denda {rupiah(self.hitung_denda(tanggal))})"
+                keterangan = (
+                    f"denda {rupiah(self.hitung_denda(tanggal))}"
+                    if self.koleksi.kena_denda() else "tanpa denda, koleksi digital"
                 )
+                teks += f" | TERLAMBAT {self.hari_terlambat(tanggal)} hari ({keterangan})"
         else:
             teks += f" ({self.tanggal_kembali}) | Denda: {rupiah(self.denda)}"
         return teks
