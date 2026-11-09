@@ -1,0 +1,97 @@
+{
+  "nama": "Perpustakaan Kampus",
+  "koleksi": [
+    {
+      "tipe": "Buku",
+      "kode": "B001",
+      "judul": "Laskar Pelangi",
+      "tahun": 2005,
+      "stok": 3,
+      "penulis": "Andrea Hirata",
+      "penerbit": "Bentang Pustaka",
+      "isbn": "9789793062792"
+    },
+    {
+      "tipe": "Buku",
+      "kode": "B002",
+      "judul": "Bumi Manusia",
+      "tahun": 1980,
+      "stok": 2,
+      "penulis": "Pramoedya Ananta Toer",
+      "penerbit": "Hasta Mitra",
+      "isbn": ""
+    },
+    {
+      "tipe": "Buku",
+      "kode": "B003",
+      "judul": "Pemrograman Python untuk Pemula",
+      "tahun": 2021,
+      "stok": 4,
+      "penulis": "Budi Raharjo",
+      "penerbit": "Informatika",
+      "isbn": ""
+    },
+    {
+      "tipe": "Buku",
+      "kode": "B004",
+      "judul": "Clean Code",
+      "tahun": 2008,
+      "stok": 1,
+      "penulis": "Robert C. Martin",
+      "penerbit": "Prentice Hall",
+      "isbn": ""
+    },
+    {
+      "tipe": "Majalah",
+      "kode": "M001",
+      "judul": "Majalah Tempo",
+      "tahun": 2024,
+      "stok": 2,
+      "edisi": "Edisi Januari"
+    },
+    {
+      "tipe": "Referensi",
+      "kode": "R001",
+      "judul": "Kamus Besar Bahasa Indonesia",
+      "tahun": 2016,
+      "stok": 1,
+      "penulis": "Badan Bahasa",
+      "penerbit": "Balai Pustaka",
+      "isbn": ""
+    }
+  ],
+  "anggota": [
+    {
+      "tipe": "Mahasiswa",
+      "id_anggota": "MHS001",
+      "nama": "Nadia",
+      "telepon": "081234567890",
+      "total_denda": 0,
+      "prodi": "Informatika"
+    },
+    {
+      "tipe": "Mahasiswa",
+      "id_anggota": "MHS002",
+      "nama": "Fajar",
+      "telepon": "",
+      "total_denda": 0,
+      "prodi": "Sistem Informasi"
+    },
+    {
+      "tipe": "Dosen",
+      "id_anggota": "DSN001",
+      "nama": "Ir. Ida, S.Kom., M.T.",
+      "telepon": "",
+      "total_denda": 0,
+      "bidang": "Pemrograman"
+    },
+    {
+      "tipe": "Umum",
+      "id_anggota": "UMM001",
+      "nama": "Budi Santoso",
+      "telepon": "085600000000",
+      "total_denda": 0
+    }
+  ],
+  "peminjaman": []
+}
