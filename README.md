@@ -12,7 +12,8 @@ Seluruh kode hanya memakai *standard library* Python 3, jadi tidak ada yang perl
 
 ```bash
 cd sistem_perpustakaan_v2      # masuk ke folder proyek
-python main.py                 # jalankan aplikasi
+python main.py                 # jalankan aplikasi (menu interaktif)
+python demo.py                 # demo otomatis semua konsep PBO (untuk presentasi)
 python -m unittest -v          # jalankan semua unit test
 ```
 
@@ -23,7 +24,8 @@ program akan membuat ulang data contoh saat dijalankan.
 
 ```
 sistem_perpustakaan_v2/
-├── main.py                  # titik masuk program
+├── main.py                  # titik masuk program (menu)
+├── demo.py                  # demo non-interaktif semua konsep
 ├── perpustakaan/
 │   ├── exceptions.py        # PerpustakaanError → DataTidakDitemukan, DataDuplikat, PeminjamanDitolak
 │   ├── models/
@@ -69,6 +71,41 @@ sistem_perpustakaan_v2/
   «abstract» Penyimpanan ◀── PenyimpananJSON
 ```
 
+### UML Detail (notasi `-` internal, `+` publik)
+
+```
+┌──────────────────────────────────┐   ┌──────────────────────────────────────┐
+│ «abstract» Koleksi               │   │ «abstract» Anggota                    │
+├──────────────────────────────────┤   ├──────────────────────────────────────┤
+│ + TAHUN_MINIMAL: int  {class}    │   │ + MAKS_PINJAM / LAMA_PINJAM /         │
+│ - _kode: str      {read-only}    │   │   DENDA_PER_HARI: int  {class}        │
+│ - _judul: str                    │   │ - _id: str          {read-only}       │
+│ - _tahun: int                    │   │ - _nama: str                          │
+│ - _stok: int                     │   │ + telepon: str      {public}          │
+├──────────────────────────────────┤   │ - _email: str                         │
+│ + jenis(): str  «abstract»       │   │ - __total_denda: int {private}        │
+│ + bisa_dipinjam(): bool          │   ├──────────────────────────────────────┤
+│ + kena_denda(): bool             │   │ + jenis(): str  «abstract»            │
+│ + kurangi_stok() / tambah_stok() │   │ + tambah_denda(jumlah)                │
+│ + ringkasan(): str               │   │ + bayar_denda(jumlah): int            │
+│ + to_dict(): dict                │   │ + ringkasan(): str / to_dict(): dict  │
+└──────────────────────────────────┘   └──────────────────────────────────────┘
+
+┌───────────────────────────────────────────┐   ┌──────────────────────────────────┐
+│ Perpustakaan                              │   │ Peminjaman                        │
+├───────────────────────────────────────────┤   ├──────────────────────────────────┤
+│ + nama: str                               │   │ - _id, _anggota, _koleksi         │
+│ - _koleksi: dict[str, Koleksi]            │   │ - _tanggal_pinjam, _jatuh_tempo   │
+│ - _anggota: dict[str, Anggota]            │   │ - _tanggal_kembali, _denda        │
+│ - _peminjaman: list[Peminjaman]           │   ├──────────────────────────────────┤
+├───────────────────────────────────────────┤   │ + terlambat(tgl): bool            │
+│ + tambah/cari/ubah/hapus_koleksi()        │   │ + hitung_denda(tgl): int          │
+│ + tambah/cari/ubah/hapus_anggota()        │   │ + kembalikan(tgl): int            │
+│ + pinjam() / kembalikan() / bayar_denda() │   │ + ringkasan(): str                │
+│ + laporan(): str                          │   └──────────────────────────────────┘
+└───────────────────────────────────────────┘
+```
+
 ### MRO (Method Resolution Order)
 Bisa dilihat langsung di program: **Laporan → 6. Struktur kelas & MRO**.
 
@@ -102,13 +139,44 @@ AsistenDosen : AsistenDosen -> Mahasiswa -> Dosen -> Anggota -> ABC -> object
 | **Method overriding** | `jenis()`, `ringkasan()` (memakai `super().ringkasan()`), `bisa_dipinjam()` di `Referensi`, dan `to_dict()`. |
 | **Polymorphism** | Laporan memanggil `ringkasan()` pada semua objek tanpa memeriksa tipenya. Lama pinjam, batas pinjam, dan tarif denda otomatis berbeda sesuai jenis anggota. `kena_denda()` membuat E-Book bebas denda. |
 | **Composition / has-a** (Pert. 7) | `Perpustakaan` **memiliki** koleksi, anggota, dan peminjaman, tetapi **bukan** turunan dari class-class tersebut. `Peminjaman` memiliki referensi ke `Anggota` dan `Koleksi`. |
-| **Unit test** | 56 test di folder `tests/` mencakup validasi, abstraction, multilevel, multiple, diamond/MRO, aturan pinjam, denda, dan simpan/muat JSON. |
+| **Unit test** | 57 test di folder `tests/` mencakup validasi, abstraction, multilevel, multiple, diamond/MRO, aturan pinjam, denda, dan simpan/muat JSON. |
 
 ### is-a vs has-a
 - **is-a (inheritance):** Mahasiswa *adalah* Anggota, Buku *adalah* Koleksi, Referensi *adalah* Buku,
   EBook *adalah* Buku, dan AsistenDosen *adalah* Mahasiswa **dan** Dosen.
 - **has-a (composition):** Perpustakaan *memiliki* daftar Koleksi dan Anggota, sedangkan Peminjaman *memiliki* satu Anggota dan satu Koleksi.
   Perpustakaan tidak dibuat sebagai turunan Koleksi/Anggota karena Perpustakaan **bukan** jenis dari keduanya.
+
+## Checklist Kesesuaian dengan Materi Dosen
+
+| Materi | Poin di slide | Bukti di program |
+|---|---|---|
+| **Pertemuan 1 – Pengantar PBO** | Objek, Kelas, Encapsulation, Inheritance, Polymorphism, Abstraction | Semua dipakai (lihat tabel konsep di atas) |
+| | Struktur program Python: komentar, variabel, tipe data, `if/elif/else`, `while/for`, fungsi | `menu.py` (perulangan `while`, percabangan menu), `demo.py`, fungsi `rupiah()` dan `urutan_mro()` |
+| **Pertemuan 2 – Class & Object** | Class, object, atribut, method, constructor, `self` | Semua model di `perpustakaan/models/` |
+| | Instance vs class attribute | `MAKS_PINJAM`, `TAHUN_MINIMAL`, `FORMAT_DIDUKUNG` (class); `judul`, `nama` (instance) |
+| | Object reference & identitas (`is`) | `demo.py` bagian 1 (`b1 is b2` → False, `b1 is b3` → True) |
+| | Relasi has-a | `Peminjaman` memiliki `Anggota` dan `Koleksi`; `Perpustakaan` memiliki semuanya |
+| | Studi kasus mini Sistem Perpustakaan (Buku, Anggota, Peminjaman) | Persis menjadi class `Buku`, `Anggota`, dan `Peminjaman` |
+| | UML (`-` internal, `+` publik) | Bagian **UML Detail** di atas |
+| | Minimal dua object diuji | `demo.py` dan `tests/` |
+| **Materi 3–4 – Enkapsulasi** | Public, protected (`_`), private (`__`) | `telepon`; `_judul`, `_stok`; `__total_denda` |
+| | Akses private dengan `_NamaClass__atribut` | `demo.py` bagian 2 (`m._Anggota__total_denda`) |
+| | Getter & setter `@property` + validasi + `ValueError` | `stok`, `tahun`, `judul`, `nama`, `email`, `format_file`, `ukuran_mb` |
+| | Tugas: class, objek, akses, getter/setter, property | Semua terpenuhi |
+| **Pertemuan 5–6 – Inheritance** | `class Anak(Induk)`, `super().__init__()` | Semua subclass |
+| | Overriding dan override + `super()` | `jenis()`, `ringkasan()`, `bisa_dipinjam()`, `kena_denda()`, `to_dict()` |
+| | Polymorphism tanpa `if` per tipe | `laporan()`, `hitung_denda()` |
+| | `isinstance()` dan `issubclass()` | `Perpustakaan.tambah_*()`, `demo.py`, `tests/` |
+| | Single, multilevel, hierarchical, multiple (mixin), diamond + MRO | Lihat bagian **MRO** di atas |
+| | Validasi parent (kode/nama, **format email**), child, manager (tipe & duplikat) | `Anggota`, `Mahasiswa`/`Dosen`, `Perpustakaan` |
+| | Unit test `unittest` | 57 test di `tests/` |
+| **Pertemuan 7 – Review** | Read-only property untuk identitas | `kode`, `id`, `total_denda` |
+| | Validasi juga saat `__init__` | Constructor memakai setter |
+| | Hindari list/dict mutable sebagai class attribute | Koleksi data dibuat di `__init__` (`self._koleksi = {}`) |
+| | Exception ditangkap di lapisan antarmuka | `MenuPerpustakaan._jalankan()` |
+| | Nilai `True`/`False` sebagai angka ditolak | Setter `stok`, `tahun`, `ukuran_mb`, dan denda |
+| | is-a vs has-a, demo output, rubrik 100 poin | README ini, `demo.py`, tabel rubrik di bawah |
 
 ## Fitur & Aturan Bisnis
 
@@ -131,8 +199,8 @@ AsistenDosen : AsistenDosen -> Mahasiswa -> Dosen -> Anggota -> ABC -> object
 
 | Aspek | Bobot | Bukti |
 |---|---|---|
-| Class & Object | 20 | `models/`, objek data contoh di `penyimpanan.py` |
+| Class & Object | 20 | `models/`, objek data contoh di `penyimpanan.py`, `demo.py` |
 | Enkapsulasi & Abstraction | 25 | property + validasi, `_protected`, `__total_denda` private, read-only, abstract class |
 | Inheritance | 25 | single, hierarchical, multilevel, multiple (mixin), diamond + MRO, `super()`, overriding, polymorphism |
-| Pengujian | 20 | `tests/` (56 test, `python -m unittest -v`) |
-| Dokumentasi | 10 | README ini (diagram kelas, is-a / has-a) |
+| Pengujian | 20 | `tests/` (57 test, `python -m unittest -v`) |
+| Dokumentasi | 10 | README ini (diagram kelas, UML, MRO, is-a / has-a, checklist materi) |

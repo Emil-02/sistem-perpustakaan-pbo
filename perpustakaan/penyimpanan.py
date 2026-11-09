@@ -105,9 +105,9 @@ def buat_data_contoh():
     perpus.tambah_koleksi(EBook("E002", "Struktur Data dengan Python", 2022, "Rinaldi Munir", "Informatika", "EPUB", 2.3, stok=3))
     perpus.tambah_koleksi(Referensi("R001", "Kamus Besar Bahasa Indonesia", 2016, "Badan Bahasa", "Balai Pustaka", stok=1))
 
-    perpus.tambah_anggota(Mahasiswa("MHS001", "Nadia", "Informatika", "081234567890"))
+    perpus.tambah_anggota(Mahasiswa("MHS001", "Nadia", "Informatika", "081234567890", email="nadia@kampus.ac.id"))
     perpus.tambah_anggota(Mahasiswa("MHS002", "Fajar", "Sistem Informasi"))
-    perpus.tambah_anggota(Dosen("DSN001", "Ir. Ida, S.Kom., M.T.", "Pemrograman"))
+    perpus.tambah_anggota(Dosen("DSN001", "Ir. Ida, S.Kom., M.T.", "Pemrograman", email="ida@kampus.ac.id"))
     perpus.tambah_anggota(AsistenDosen("ASD001", "Rizky Pratama", "Informatika", "Praktikum PBO"))
     perpus.tambah_anggota(Umum("UMM001", "Budi Santoso", "085600000000"))
     return perpus

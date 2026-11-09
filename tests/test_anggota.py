@@ -20,6 +20,17 @@ class TestAnggota(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.mhs.nama = ""
 
+    def test_validasi_email(self):
+        self.assertEqual(self.mhs.email, "")  # boleh kosong
+        self.mhs.email = " nadia@kampus.ac.id "
+        self.assertEqual(self.mhs.email, "nadia@kampus.ac.id")
+        for salah in ("nadia", "nadia@kampus", "na dia@kampus.ac.id", "@kampus.ac.id"):
+            with self.assertRaises(ValueError):
+                self.mhs.email = salah
+        self.assertEqual(self.mhs.email, "nadia@kampus.ac.id")
+        with self.assertRaises(ValueError):
+            Dosen("D9", "Aditya", "AI", email="salah-format")
+
     def test_aturan_berbeda_per_jenis(self):
         self.assertEqual((Mahasiswa.MAKS_PINJAM, Mahasiswa.LAMA_PINJAM, Mahasiswa.DENDA_PER_HARI), (3, 7, 1000))
         self.assertEqual((Dosen.MAKS_PINJAM, Dosen.LAMA_PINJAM, Dosen.DENDA_PER_HARI), (5, 14, 500))

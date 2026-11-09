@@ -90,6 +90,7 @@
       "id_anggota": "MHS001",
       "nama": "Nadia",
       "telepon": "081234567890",
+      "email": "nadia@kampus.ac.id",
       "total_denda": 0,
       "prodi": "Informatika"
     },
@@ -98,6 +99,7 @@
       "id_anggota": "MHS002",
       "nama": "Fajar",
       "telepon": "",
+      "email": "",
       "total_denda": 0,
       "prodi": "Sistem Informasi"
     },
@@ -106,6 +108,7 @@
       "id_anggota": "DSN001",
       "nama": "Ir. Ida, S.Kom., M.T.",
       "telepon": "",
+      "email": "ida@kampus.ac.id",
       "total_denda": 0,
       "bidang": "Pemrograman"
     },
@@ -114,6 +117,7 @@
       "id_anggota": "ASD001",
       "nama": "Rizky Pratama",
       "telepon": "",
+      "email": "",
       "total_denda": 0,
       "bidang": "Praktikum PBO",
       "prodi": "Informatika"
@@ -123,6 +127,7 @@
       "id_anggota": "UMM001",
       "nama": "Budi Santoso",
       "telepon": "085600000000",
+      "email": "",
       "total_denda": 0
     }
   ],

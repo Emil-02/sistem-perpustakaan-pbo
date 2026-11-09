@@ -211,16 +211,17 @@ class MenuPerpustakaan:
             raise DataDuplikat(f"ID anggota {id_anggota.upper()} sudah terdaftar")
         nama = self._input("Nama       : ")
         telepon = self._input("Telepon    : ", wajib=False, bawaan="")
+        email = self._input("Email      : ", wajib=False, bawaan="")
         if jenis == "1":
-            anggota = Mahasiswa(id_anggota, nama, self._input("Prodi      : "), telepon)
+            anggota = Mahasiswa(id_anggota, nama, self._input("Prodi      : "), telepon, email=email)
         elif jenis == "2":
-            anggota = Dosen(id_anggota, nama, self._input("Bidang     : "), telepon)
+            anggota = Dosen(id_anggota, nama, self._input("Bidang     : "), telepon, email=email)
         elif jenis == "4":
             prodi = self._input("Prodi      : ")
             bidang = self._input("Bidang     : ")
-            anggota = AsistenDosen(id_anggota, nama, prodi, bidang, telepon)
+            anggota = AsistenDosen(id_anggota, nama, prodi, bidang, telepon, email=email)
         else:
-            anggota = Umum(id_anggota, nama, telepon)
+            anggota = Umum(id_anggota, nama, telepon, email=email)
         self.perpus.tambah_anggota(anggota)
         print(f"  ✓ {anggota.jenis()} '{anggota.nama}' ditambahkan.")
         return True
@@ -237,7 +238,7 @@ class MenuPerpustakaan:
         print("Data saat ini:", anggota.ringkasan())
         print("(Kosongkan input jika tidak ingin mengubah)")
         perubahan = {}
-        for atribut in ("nama", "telepon", "prodi", "bidang"):
+        for atribut in ("nama", "telepon", "email", "prodi", "bidang"):
             if hasattr(anggota, atribut):
                 nilai = self._input(f"{atribut.capitalize():<10} [{getattr(anggota, atribut)}]: ", wajib=False)
                 if nilai is not None:

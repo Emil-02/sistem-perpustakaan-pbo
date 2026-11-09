@@ -10,6 +10,7 @@ Hierarki (membentuk diamond):
 MRO AsistenDosen: AsistenDosen -> Mahasiswa -> Dosen -> Anggota -> ABC -> object
 """
 
+import re
 from abc import ABC, abstractmethod
 
 from .koleksi import _teks_wajib
@@ -22,12 +23,15 @@ class Anggota(ABC):
     MAKS_PINJAM = 2
     LAMA_PINJAM = 7  # hari
     DENDA_PER_HARI = 1000  # rupiah
+    _POLA_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
-    def __init__(self, id_anggota, nama, telepon="", total_denda=0):
+    def __init__(self, id_anggota, nama, telepon="", total_denda=0, email=""):
         self._id = _teks_wajib(id_anggota, "ID anggota").upper()
         self._nama = ""
         self.nama = nama
         self.telepon = telepon  # public
+        self._email = ""
+        self.email = email
         self.__total_denda = 0  # private: hanya diubah lewat method
         if total_denda:
             self.tambah_denda(total_denda)
@@ -43,6 +47,18 @@ class Anggota(ABC):
     @nama.setter
     def nama(self, nilai):
         self._nama = _teks_wajib(nilai, "Nama")
+
+    @property
+    def email(self):
+        return self._email
+
+    @email.setter
+    def email(self, nilai):
+        """Email boleh dikosongkan, tetapi jika diisi formatnya harus wajar."""
+        nilai = (nilai or "").strip()
+        if nilai and not self._POLA_EMAIL.match(nilai):
+            raise ValueError(f"Format email tidak valid: {nilai}")
+        self._email = nilai
 
     @property
     def total_denda(self):
@@ -70,7 +86,7 @@ class Anggota(ABC):
 
     def info_tambahan(self):
         """Daftar info khusus subclass; subclass menambah lewat super() (kooperatif)."""
-        return []
+        return [f"Email: {self.email}"] if self.email else []
 
     def ringkasan(self):
         teks = f"{self.id} | {self.jenis():<13} | {self.nama}"
@@ -87,6 +103,7 @@ class Anggota(ABC):
             "id_anggota": self.id,
             "nama": self.nama,
             "telepon": self.telepon,
+            "email": self.email,
             "total_denda": self.total_denda,
         }
 
@@ -178,9 +195,9 @@ class AsistenDosen(Mahasiswa, Dosen):
 
     LAMA_PINJAM = 14
 
-    def __init__(self, id_anggota, nama, prodi, bidang, telepon="", total_denda=0):
-        super().__init__(id_anggota=id_anggota, nama=nama, prodi=prodi,
-                         bidang=bidang, telepon=telepon, total_denda=total_denda)
+    def __init__(self, id_anggota, nama, prodi, bidang, telepon="", total_denda=0, email=""):
+        super().__init__(id_anggota=id_anggota, nama=nama, prodi=prodi, bidang=bidang,
+                         telepon=telepon, total_denda=total_denda, email=email)
 
     def jenis(self):
         return "Asisten Dosen"

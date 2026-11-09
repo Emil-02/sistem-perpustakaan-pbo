@@ -83,7 +83,8 @@ class TestMultipleInheritance(unittest.TestCase):
 
 class TestDiamondDanMRO(unittest.TestCase):
     def setUp(self):
-        self.asisten = AsistenDosen("ASD1", "Rizky", "Informatika", "Praktikum PBO", total_denda=500)
+        self.asisten = AsistenDosen("ASD1", "Rizky", "Informatika", "Praktikum PBO",
+                                    total_denda=500, email="rizky@kampus.ac.id")
 
     def test_bentuk_diamond(self):
         self.assertEqual(AsistenDosen.__bases__, (Mahasiswa, Dosen))
@@ -99,6 +100,7 @@ class TestDiamondDanMRO(unittest.TestCase):
     def test_init_kooperatif_mengisi_semua_atribut(self):
         self.assertEqual(self.asisten.prodi, "Informatika")
         self.assertEqual(self.asisten.bidang, "Praktikum PBO")
+        self.assertEqual(self.asisten.email, "rizky@kampus.ac.id")
         # Anggota.__init__ hanya sekali, jadi denda awal tidak terhitung dua kali
         self.assertEqual(self.asisten.total_denda, 500)
 
